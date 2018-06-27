@@ -34,6 +34,10 @@ func main() {
 			panic(err)
 		}
 
+		if total > len(paths) {
+			total = len(paths)
+		}
+
 		fmt.Printf("deleting %v out of %v files with %v workers\n", total, len(paths), workers)
 
 		files := make(chan string, total)
