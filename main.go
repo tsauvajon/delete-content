@@ -8,32 +8,63 @@ import (
 )
 
 func main() {
-	dirs := os.Args[3:]
+	dirs := os.Args[4:]
+
 	loading, err := strconv.Atoi(os.Args[1])
 	if err != nil {
 		fmt.Println("Invalid loading: ", err)
 		return
 	}
+
 	total, err := strconv.Atoi(os.Args[2])
 	if err != nil {
 		fmt.Println("Invalid total: ", err)
 		return
 	}
+
+	workers, err := strconv.Atoi(os.Args[3])
+	if err != nil {
+		fmt.Println("Invalid workers: ", err)
+		return
+	}
+
 	for _, dir := range dirs {
-		files, err := filepath.Glob(dir + "/*")
+		paths, err := filepath.Glob(dir + "/*")
 		if err != nil {
 			panic(err)
 		}
-		for i, f := range files {
-			if i%loading == 0 {
-				fmt.Print("#")
-			}
-			if (i+1)%total == 0 {
-				break
-			}
-			if err := os.Remove(f); err != nil {
-				panic(err)
-			}
+
+		fmt.Printf("deleting %v out of %v files with %v workers\n", total, len(paths), workers)
+
+		files := make(chan string, total)
+		results := make(chan bool, total)
+
+		for i := 0; i < workers; i++ {
+			go worker(files, results, loading)
 		}
+
+		for i := 0; i < total; i++ {
+			files <- paths[i]
+		}
+		close(files)
+
+		for i := 0; i < total; i++ {
+			<-results
+		}
+	}
+}
+
+func worker(files <-chan string, results chan<- bool, loading int) {
+	i := 0
+	for f := range files {
+		if err := os.Remove(f); err != nil {
+			results <- false
+			continue
+		}
+		if i%loading == 0 {
+			fmt.Print("#")
+		}
+		i++
+		results <- true
 	}
 }
