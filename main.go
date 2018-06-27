@@ -56,6 +56,8 @@ func main() {
 			<-results
 		}
 	}
+
+	fmt.Println(" done")
 }
 
 func worker(files <-chan string, results chan<- bool, loading int) {
