@@ -7,8 +7,18 @@ is extremely slow and inefficient.
 This utility deletes all files in a repo leveraging go's concurrency, by using
 a worker pool.
 
+Build:
+
+```
+go build
+```
+
 Usage:
-delete-directories [x] [total] [workers] [repo1] [repoX...]
+
+```
+delete-content [x] [total] [workers] [repo1] [repoX...]
+```
+
 x : displays an # every x deleted document
 total : total number of documents to delete
 workers : number of concurrent workers to run
