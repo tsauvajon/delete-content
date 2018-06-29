@@ -10,6 +10,7 @@ touch test1/a.a
 touch test1/a.b
 touch test1/a.c
 
-touch test2/a.a
-touch test2/b.b
-touch test2/c.c
+for i in {1..100}
+do
+touch test2/$i.txt
+done

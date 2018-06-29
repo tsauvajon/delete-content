@@ -34,17 +34,19 @@ func main() {
 			panic(err)
 		}
 
+		total := total
+
 		if total > len(paths) {
 			total = len(paths)
 		}
 
-		fmt.Printf("deleting %v out of %v files with %v workers\n", total, len(paths), workers)
+		fmt.Printf("deleting %v out of %v files in %s with %v workers\n", total, len(paths), dir, workers)
 
 		files := make(chan string, total)
-		results := make(chan bool, total)
+		done := make(chan bool, total)
 
 		for i := 0; i < workers; i++ {
-			go worker(files, results, loading)
+			go worker(files, done)
 		}
 
 		for i := 0; i < total; i++ {
@@ -53,24 +55,24 @@ func main() {
 		close(files)
 
 		for i := 0; i < total; i++ {
-			<-results
+			<-done
+			if i%loading == 0 {
+				fmt.Print("#")
+			}
 		}
-	}
 
-	fmt.Println(" done")
+		fmt.Println(" done")
+	}
 }
 
-func worker(files <-chan string, results chan<- bool, loading int) {
+func worker(files <-chan string, done chan<- bool) {
 	i := 0
 	for f := range files {
 		if err := os.Remove(f); err != nil {
-			results <- false
+			done <- false
 			continue
 		}
-		if i%loading == 0 {
-			fmt.Print("#")
-		}
 		i++
-		results <- true
+		done <- true
 	}
 }
