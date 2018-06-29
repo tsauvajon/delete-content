@@ -19,7 +19,7 @@ Usage:
 delete-content [x] [total] [workers] [repo1] [repoX...]
 ```
 
-x : displays an # every x deleted document
-total : total number of documents to delete
-workers : number of concurrent workers to run
-repo1, repo2, repo3 ... : folders to clean
+x : displays an # every x deleted document  
+total : total number of documents to delete  
+workers : number of concurrent workers to run  
+repo1, repo2, repo3 ... : folders to clean  
