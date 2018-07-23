@@ -23,3 +23,8 @@ x : displays an # every x deleted document
 total : total number of documents to delete  
 workers : number of concurrent workers to run  
 repo1, repo2, repo3 ... : folders to clean  
+
+Example:
+```
+delete-content 1000 20000 10 done
+```
