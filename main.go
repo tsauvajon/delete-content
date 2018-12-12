@@ -91,7 +91,7 @@ func main() {
 
 		close(files)
 
-		fmt.Print(" done")
+		fmt.Printf(" successfully deleted %d files", count)
 		if errors > 0 {
 			fmt.Printf(" (%d errors)", errors)
 		}
