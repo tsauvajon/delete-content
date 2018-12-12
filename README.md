@@ -16,7 +16,7 @@ go build
 Usage:
 
 ```
-./delete-content [flags] [folder1] [folderX...]
+./delete-content [flags] [folder1] [folder2] [folderN...]
 ```
 
 -nb number of files to delete (default 0: delete every file)  

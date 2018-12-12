@@ -24,6 +24,11 @@ func main() {
 	flag.Parse()
 	dirs := flag.Args()
 
+	if len(dirs) == 0 {
+		fmt.Println("at least 1 folder to delete")
+		return
+	}
+
 	if *workers == 0 {
 		fmt.Println("at least 1 worker")
 		return
