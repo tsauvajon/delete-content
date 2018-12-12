@@ -57,6 +57,7 @@ func main() {
 
 		errors := 0
 		skipped := 0
+		success := 0
 		count := 0
 
 		for i := 0; i < (*workers); i++ {
@@ -75,6 +76,7 @@ func main() {
 			case StatusSkipped:
 				skipped++
 			default:
+				success++
 			}
 
 			if currentFileIndex < len(paths) {
@@ -90,7 +92,7 @@ func main() {
 
 		close(files)
 
-		fmt.Printf(" successfully deleted %d files", count)
+		fmt.Printf(" successfully deleted %d files", success)
 		if errors > 0 {
 			fmt.Printf(" (%d errors)", errors)
 		}

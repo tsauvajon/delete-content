@@ -1,6 +1,6 @@
 export GOARCH=amd64 CGO_ENABLED=0
 
-rm delete-content-*.zip
+rm delete-content-*.zip 2> /dev/null
 [ -e delete-content ] && rm delete-content
 
 echo "building for linux64"
