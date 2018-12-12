@@ -18,7 +18,6 @@ const (
 )
 
 func main() {
-	total := flag.Int("nb", 0, "number of files to delete (0 to delete every file)")
 	daysLimit := flag.Int("d", 0, "only delete documents older than this number of days")
 	workers := flag.Int("w", 10, "number of concurrent workers")
 	flag.Parse()
@@ -46,25 +45,13 @@ func main() {
 			panic(err)
 		}
 
-		// use a "local" total for the current dir, that can be reassigned locally
-		total := (*total)
-
-		if total > len(paths) || total == 0 {
-			total = len(paths)
-		}
-
 		fmt.Print(dir)
 		fmt.Print(" ")
 
-		files := make(chan string, total)
+		files := make(chan string, len(paths))
 		status := make(chan int, len(paths))
-		done := make(chan bool, 1)
 
-		for i := 0; i < (*workers); i++ {
-			go worker(files, done, status, limit)
-		}
-
-		loading := (total / 10)
+		loading := (len(paths) / 10)
 		if loading == 0 {
 			loading = 1
 		}
@@ -73,42 +60,36 @@ func main() {
 		skipped := 0
 		count := 0
 
-		finished := false
+		for i := 0; i < (*workers); i++ {
+			go worker(files, status, limit)
+		}
 
 		var currentFileIndex int
-		for currentFileIndex = 0; currentFileIndex < (*workers); currentFileIndex++ {
+		for currentFileIndex = 0; currentFileIndex < (*workers) && currentFileIndex < len(paths); currentFileIndex++ {
 			files <- paths[currentFileIndex]
 		}
 
-		for !finished {
+		for i := 0; i < len(paths); i++ {
 			switch <-status {
 			case StatusError:
 				errors++
 			case StatusSkipped:
 				skipped++
-			case StatusOk:
-				count++
-				if count >= total {
-					done <- true
-					finished = true
-				}
+			default:
 			}
 
-			currentFileIndex++
-			if currentFileIndex >= total {
-				done <- true
-				finished = true
-			} else {
+			if currentFileIndex < len(paths) {
 				files <- paths[currentFileIndex]
+				currentFileIndex++
 			}
 
+			count++
 			if count%loading == 0 {
 				fmt.Print("#")
 			}
 		}
 
 		close(files)
-		close(status)
 
 		fmt.Print(" done")
 		if errors > 0 {
@@ -121,23 +102,17 @@ func main() {
 	}
 }
 
-func worker(files <-chan string, done <-chan bool, status chan<- int, limit time.Time) {
-	for {
-		var f string
-		select {
-		case f = <-files:
-		case <-done:
-			return
-		}
+func worker(files <-chan string, status chan<- int, limit time.Time) {
+	for f := range files {
+		// can't read the filo info ?
 		fi, err := os.Stat(f)
 		if err != nil {
 			status <- StatusError
 			continue
 		}
 
-		mtime := fi.ModTime()
-
-		if mtime.After(limit) {
+		// modified too recently to delete ?
+		if mtime := fi.ModTime(); mtime.After(limit) {
 			status <- StatusSkipped
 			continue
 		}
