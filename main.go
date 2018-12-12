@@ -5,13 +5,33 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
+)
+
+const (
+	// StatusOk : Deletion OK
+	StatusOk = 0
+	// StatusError : Deletion failed
+	StatusError = 1
+	// StatusSkipped : The file is too recent
+	StatusSkipped = 2
 )
 
 func main() {
 	total := flag.Int("nb", 0, "number of files to delete (0 to delete every file)")
+	daysLimit := flag.Int("d", 0, "only delete documents older than this number of days")
 	workers := flag.Int("w", 10, "number of concurrent workers")
 	flag.Parse()
 	dirs := flag.Args()
+
+	if *workers == 0 {
+		fmt.Println("at least 1 worker")
+		return
+	}
+
+	day := 24 * time.Hour
+	days := time.Duration(-1*(*daysLimit)) * day
+	limit := time.Now().Add(days)
 
 	fmt.Printf("deleting %d folders with %d concurrent workers\n", len(dirs), (*workers))
 
@@ -21,24 +41,24 @@ func main() {
 			panic(err)
 		}
 
-		// use a "local" total for the current dir, that can be reassigned
+		// use a "local" total for the current dir, that can be reassigned locally
 		total := (*total)
 
 		if total > len(paths) || total == 0 {
 			total = len(paths)
 		}
 
-		// fmt.Printf("deleting %d out of %d files in %s with %d workers\n", total, len(paths), dir, (*workers))
 		fmt.Print(dir)
 		fmt.Print(" ")
 
 		files := make(chan string, total)
-		done := make(chan bool, total)
+		status := make(chan int, total)
 
 		for i := 0; i < (*workers); i++ {
-			go worker(files, done)
+			go worker(files, status, limit)
 		}
 
+		// TODO: if it skips a file, try a new one
 		for i := 0; i < total; i++ {
 			files <- paths[i]
 		}
@@ -49,23 +69,53 @@ func main() {
 			loading = 1
 		}
 
+		errors := 0
+		skipped := 0
+
 		for i := 0; i < total; i++ {
-			<-done
+			switch <-status {
+			case StatusError:
+				errors++
+			case StatusSkipped:
+				skipped++
+			}
+
 			if i%loading == 0 {
 				fmt.Print("#")
 			}
 		}
 
-		fmt.Println(" done")
+		fmt.Print(" done")
+		if errors > 0 {
+			fmt.Printf(" (%d errors)", errors)
+		}
+		if skipped > 0 {
+			fmt.Printf(" (%d skipped)", skipped)
+		}
+		fmt.Println()
 	}
 }
 
-func worker(files <-chan string, done chan<- bool) {
+func worker(files <-chan string, status chan<- int, limit time.Time) {
 	for f := range files {
-		if err := os.Remove(f); err != nil {
-			done <- false
+		fi, err := os.Stat(f)
+		if err != nil {
+			status <- StatusError
 			continue
 		}
-		done <- true
+
+		mtime := fi.ModTime()
+
+		if mtime.After(limit) {
+			status <- StatusSkipped
+			continue
+		}
+
+		if err := os.Remove(f); err != nil {
+			status <- StatusError
+			continue
+		}
+
+		status <- StatusOk
 	}
 }

@@ -16,15 +16,15 @@ go build
 Usage:
 
 ```
-delete-content [x] [total] [workers] [repo1] [repoX...]
+./delete-content [flags] [folder1] [folderX...]
 ```
 
-x : displays an # every x deleted document  
-total : total number of documents to delete  
-workers : number of concurrent workers to run  
-repo1, repo2, repo3 ... : folders to clean  
+-nb number of files to delete (default 0: delete every file)
+-w number of concurrent workers (default 10)
+-d only delete documents older than this number of days (default 0: all files)
 
 Example:
 ```
-delete-content 1000 20000 10 done
+# delete 10 files in the folders ./folder1, ./folder2 and ./folder3 that are at least 7 days old, with 5 concurrent workers
+./delete-content -nb=10 -d=7 -w=5 folder1 folder2 folder3
 ```
