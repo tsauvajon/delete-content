@@ -1,22 +1,18 @@
 export GOARCH=amd64 CGO_ENABLED=0
 
-rm delete-content-*.zip 2> /dev/null
-[ -e delete-content ] && rm delete-content
+rm -f dist/*
 
 echo "building for linux64"
-GOOS=linux go build -o delete-content
-zip delete-content-linux64.zip delete-content
-
-rm delete-content
+GOOS=linux go build -o dist/delete-content
+zip -j dist/delete-content-linux64.zip dist/delete-content
+mv dist/delete-content dist/delete-content-linux
 
 echo "building for macOS64"
-GOOS=darwin go build -o delete-content
-zip delete-content-macos64.zip delete-content
-
-rm delete-content
+GOOS=darwin go build -o dist/delete-content
+zip -j dist/delete-content-macos64.zip dist/delete-content
+mv dist/delete-content dist/delete-content-macos
 
 echo "building for windows64"
-GOOS=windows go build -o delete-content.exe
-zip delete-content-windows64.zip delete-content.exe
-
-rm delete-content.exe
+GOOS=windows go build -o dist/delete-content.exe
+zip -j dist/delete-content-windows64.zip dist/delete-content.exe
+mv dist/delete-content.exe dist/delete-content-windows.exe
