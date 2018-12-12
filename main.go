@@ -57,17 +57,12 @@ func main() {
 		fmt.Print(" ")
 
 		files := make(chan string, total)
-		status := make(chan int, total)
+		status := make(chan int, len(paths))
+		done := make(chan bool, 1)
 
 		for i := 0; i < (*workers); i++ {
-			go worker(files, status, limit)
+			go worker(files, done, status, limit)
 		}
-
-		// TODO: if it skips a file, try a new one
-		for i := 0; i < total; i++ {
-			files <- paths[i]
-		}
-		close(files)
 
 		loading := (total / 10)
 		if loading == 0 {
@@ -76,19 +71,44 @@ func main() {
 
 		errors := 0
 		skipped := 0
+		count := 0
 
-		for i := 0; i < total; i++ {
+		finished := false
+
+		var currentFileIndex int
+		for currentFileIndex = 0; currentFileIndex < (*workers); currentFileIndex++ {
+			files <- paths[currentFileIndex]
+		}
+
+		for !finished {
 			switch <-status {
 			case StatusError:
 				errors++
 			case StatusSkipped:
 				skipped++
+			case StatusOk:
+				count++
+				if count >= total {
+					done <- true
+					finished = true
+				}
 			}
 
-			if i%loading == 0 {
+			currentFileIndex++
+			if currentFileIndex >= total {
+				done <- true
+				finished = true
+			} else {
+				files <- paths[currentFileIndex]
+			}
+
+			if count%loading == 0 {
 				fmt.Print("#")
 			}
 		}
+
+		close(files)
+		close(status)
 
 		fmt.Print(" done")
 		if errors > 0 {
@@ -101,8 +121,14 @@ func main() {
 	}
 }
 
-func worker(files <-chan string, status chan<- int, limit time.Time) {
-	for f := range files {
+func worker(files <-chan string, done <-chan bool, status chan<- int, limit time.Time) {
+	for {
+		var f string
+		select {
+		case f = <-files:
+		case <-done:
+			return
+		}
 		fi, err := os.Stat(f)
 		if err != nil {
 			status <- StatusError
