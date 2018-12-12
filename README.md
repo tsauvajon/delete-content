@@ -19,12 +19,11 @@ Usage:
 ./delete-content [flags] [folder1] [folderX...]
 ```
 
--nb number of files to delete (default 0: delete every file)
--w number of concurrent workers (default 10)
+-nb number of files to delete (default 0: delete every file)  
+-w number of concurrent workers (default 10)  
 -d only delete documents older than this number of days (default 0: all files)
 
-Example:
+Example: delete 10 files in the folders ./folder1, ./folder2 and ./folder3 that are at least 7 days old, with 5 concurrent workers
 ```
-# delete 10 files in the folders ./folder1, ./folder2 and ./folder3 that are at least 7 days old, with 5 concurrent workers
 ./delete-content -nb=10 -d=7 -w=5 folder1 folder2 folder3
 ```
