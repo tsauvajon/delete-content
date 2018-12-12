@@ -7,7 +7,7 @@ rm -f dist/*
 # $2 GOARCH
 # $3 textual platform
 # $4 zipped executable name
-# $5 moved executable name
+# $5 unzipped executable name
 build_for()
 {
     echo "building for $1-$2"
@@ -16,6 +16,6 @@ build_for()
     mv dist/$4 dist/$5
 }
 
-build_for linux amd64 linux delete-content delete-content-linux
-build_for darwin amd64 macos delete-content delete-content-macos
-build_for windows amd64 windows delete-content.exe delete-content-windows.exe
+build_for linux amd64 linux delete-content delete-content-linux-amd64
+build_for darwin amd64 macos delete-content delete-content-macos-amd64
+build_for windows amd64 windows delete-content.exe delete-content-windows-amd64.exe
