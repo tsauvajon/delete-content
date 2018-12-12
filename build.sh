@@ -1,18 +1,21 @@
-export GOARCH=amd64 CGO_ENABLED=0
+export CGO_ENABLED=0
 
 rm -f dist/*
 
-echo "building for linux64"
-GOOS=linux go build -o dist/delete-content
-zip -j dist/delete-content-linux64.zip dist/delete-content
-mv dist/delete-content dist/delete-content-linux
+# arguments :
+# $1 GOOS
+# $2 GOARCH
+# $3 textual platform
+# $4 zipped executable name
+# $5 moved executable name
+build_for()
+{
+    echo "building for $1-$2"
+    GOOS=$1 GOARCH=$2 go build -o dist/$4
+    zip -j dist/delete-content-$3-$2.zip dist/$4
+    mv dist/$4 dist/$5
+}
 
-echo "building for macOS64"
-GOOS=darwin go build -o dist/delete-content
-zip -j dist/delete-content-macos64.zip dist/delete-content
-mv dist/delete-content dist/delete-content-macos
-
-echo "building for windows64"
-GOOS=windows go build -o dist/delete-content.exe
-zip -j dist/delete-content-windows64.zip dist/delete-content.exe
-mv dist/delete-content.exe dist/delete-content-windows.exe
+build_for linux amd64 linux delete-content delete-content-linux
+build_for darwin amd64 macos delete-content delete-content-macos
+build_for windows amd64 windows delete-content.exe delete-content-windows.exe
