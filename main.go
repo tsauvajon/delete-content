@@ -45,8 +45,7 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Print(dir)
-		fmt.Print(" ")
+		fmt.Printf("deleting %d files in '%s' ", len(paths), dir)
 
 		files := make(chan string, len(paths))
 		status := make(chan int, len(paths))
